@@ -1,10 +1,10 @@
 <template>
 	<el-row class="container">
 			<el-menu :default-active="currentActive" class="el-menu-demo" mode="horizontal">
-  				<el-menu-item index="/admin/imports"><router-link to="/form">导入题库</router-link></el-menu-item>
+  				<el-menu-item index="/admin/imports"><router-link to="/imports">导入题库</router-link></el-menu-item>
 				<el-menu-item index="/admin/manage"><router-link to="/manage">题目管理</router-link></el-menu-item>
 			</el-menu>
-			<router-view></router-view>
+			<router-view>12345</router-view>
 	</el-row>
 </template>
 
