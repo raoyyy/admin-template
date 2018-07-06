@@ -27,9 +27,8 @@ import XLSX from 'xlsx'
 
 export default {
   methods:{
-    
     handleSuccess() {
-      console.log("success")
+      this.$axios.get('http://localhost:3000/')
       this.$message.success('上传成功');
     },
     handleError(err) {
