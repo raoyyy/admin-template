@@ -40,14 +40,14 @@
 			<el-table-column className="column_center" label="操作" width="150">
 				<template scope="scope">
 					<!-- <el-button size="small"  @click="handleEdit(scope.$index, scope.row)">编辑</el-button> -->
-					<el-button type="danger" size="small" @click="handleDel(scope.$index, scope.row)">删除</el-button>
+					<el-button type="danger" size="small" @click.stop="handleDel(scope.$index, scope.row)">删除</el-button>
 				</template>
 			</el-table-column>
 		</el-table>
 
 		<!--工具条-->
 		<el-col :span="24" class="toolbar">
-			<el-button type="danger" style="float:left;" :disabled="this.sels.length===0">批量删除</el-button>
+			<el-button type="danger"  @click="batchRemove" style="float:left;" :disabled="this.sels.length===0">批量删除</el-button>
 			<el-pagination  :current-page="currentPage" layout="prev, pager, next" @current-change="handleCurrentChange" :page-size="20" :total="total" style="float:right;">
 			</el-pagination>
 		</el-col>
@@ -257,7 +257,6 @@
 						}
 					}
 				}
-				console.log(this.editForm.answer)				
 			},
 			editSubmit: function () {
 				this.$refs.editForm.validate((valid) => {
@@ -291,25 +290,58 @@
 			},
 			//删除
 			handleDel: function (index, row) {
+				var that = this
 				this.$confirm('确认删除该记录吗?', '提示', {
 					type: 'warning'
 				}).then(() => {
 					this.listLoading = true;
-					//NProgress.start();
-					let para = { id: row.id };
-					removeUser(para).then((res) => {
-						this.listLoading = false;
-						//NProgress.done();
-						this.$message({
+					console.log(row._id) //通过row._id去数据库删除
+					// console.log("index:" +index) 从0开始
+					this.$axios.post('http://localhost:3000/questions',
+					{
+						id:row._id
+					})
+					.then(function (res) {
+						that.$message({
 							message: '删除成功',
 							type: 'success'
 						});
-						this.getUsers();
-					});
+						that.getQuestions()
+					})
+					// removeUser(para).then((res) => {
+					// 	this.listLoading = false;
+					// 	//NProgress.done();
+					// 	this.$message({
+					// 		message: '删除成功',
+					// 		type: 'success'
+					// 	});
+					// 	this.getUsers();
+					// });
+				})		
+			},		
+			// 批量删除
+			batchRemove: function () {
+				var that = this
+				var ids = this.sels.map(item => item._id);
+				this.$confirm('确认删除选中记录吗？', '提示', {
+					type: 'warning'
+				}).then(() => {
+					this.listLoading = true;
+					this.$axios.post('http://localhost:3000/questions/delBatch',
+					{
+						id:ids
+					})
+					.then(function (res) {
+						that.$message({
+							message: '删除成功',
+							type: 'success'
+						});
+						that.getQuestions()
+					})
 				}).catch(() => {
 
 				});
-			},		
+			},
 			handleCurrentChange(val) {
 				this.page = val;
 				if(typeof val == 'number'){
@@ -445,30 +477,7 @@
 			// },
 			selsChange: function (sels) {
 				this.sels = sels;
-			},
-			//批量删除
-		// 	batchRemove: function () {
-		// 		var ids = this.sels.map(item => item.id).toString();
-		// 		this.$confirm('确认删除选中记录吗？', '提示', {
-		// 			type: 'warning'
-		// 		}).then(() => {
-		// 			this.listLoading = true;
-		// 			//NProgress.start();
-		// 			let para = { ids: ids };
-		// 			batchRemoveUser(para).then((res) => {
-		// 				this.listLoading = false;
-		// 				//NProgress.done();
-		// 				this.$message({
-		// 					message: '删除成功',
-		// 					type: 'success'
-		// 				});
-		// 				this.getUsers();
-		// 			});
-		// 		}).catch(() => {
-
-		// 		});
-		// 	}
-		// },
+			}
 		},
 		mounted() {
 			var that = this //注意用that
