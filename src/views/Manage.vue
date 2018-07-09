@@ -25,17 +25,17 @@
 			</el-table-column>
 			<el-table-column className="column_center" prop="title" label="题目" width="520" sortable>
 			</el-table-column>
-			<el-table-column className="column_center" prop="options[0][title]" label="选项A" width="150"  sortable>
+			<el-table-column className="column_center" prop="options[0][title]" label="选项A" width="150">
 			</el-table-column>
-			<el-table-column className="column_center" prop="options[1][title]" label="选项B" width="150" sortable>
+			<el-table-column className="column_center" prop="options[1][title]" label="选项B" width="150">
 			</el-table-column>
-			<el-table-column className="column_center" prop="options[2][title]" label="选项C" width="150" sortable>
+			<el-table-column className="column_center" prop="options[2][title]" label="选项C" width="150">
 			</el-table-column>
-			<el-table-column className="column_center" prop="options[3][title]" label="选项D" width="150" sortable>
+			<el-table-column className="column_center" prop="options[3][title]" label="选项D" width="150">
 			</el-table-column>
-			<el-table-column className="column_center" prop="options[4][title]" label="选项E" width="150" sortable>
+			<el-table-column className="column_center" prop="options[4][title]" label="选项E" width="150">
 			</el-table-column>
-			<el-table-column className="column_center" prop="answer" label="答案" width="120" sortable>
+			<el-table-column className="column_center" prop="answer" label="答案" width="120">
 			</el-table-column>
 			<el-table-column className="column_center" label="操作" width="150">
 				<template scope="scope">
@@ -201,7 +201,8 @@
 				},
 				//编辑界面数据
 				editForm: {
-					question: "",
+					question_id:'',
+					question: '',
 					optionA: '',
 					optionB: '',
 					optionC: '',
@@ -237,6 +238,7 @@
 			handleEdit: function (row, event, column) {
 				this.editFormVisible = true;
 				this.editForm.answer = []
+				this.editForm.question_id = row._id
 				
 				this.editForm.question = row.title
 				this.editForm.optionA = row.options[0].title
@@ -250,43 +252,42 @@
 				}
 				var answerArr = []
 				answerArr = row.answer.split('')
+				console.log('answerArr:'+answerArr)
 				for(var i=0;i<answerArr.length;i++){
-					if(answerArr[i]!=' '){
+					if(answerArr[i]!=' '&& answerArr[i] !=','){
 						if(this.editForm.answer.indexOf(answerArr[i]) == -1){
 							this.editForm.answer.push(answerArr[i])
 						}
 					}
 				}
+				console.log(this.editForm)
 			},
 			editSubmit: function () {
+				var that = this
 				this.$refs.editForm.validate((valid) => {
 					if (valid) {
-						// this.$confirm('确认提交吗？', '提示', {}).then(() => {
-						// 	this.editLoading = true;
-						// 	//NProgress.start();
-						// 	let para = Object.assign({}, this.editForm);
-						// 	console.log(para)
-						// 	this.editQuestions(para)
-						// 	this.editLoading = false;
-						// 	//NProgress.done();
-						// 	this.$message({
-						// 		message: '提交成功',
-						// 		type: 'success'
-						// 	});
-						// 	this.$store.getters.getLatestQuestions;
-						// 	this.$refs['editForm'].resetFields();
-						// 	this.editFormVisible = false;
-						// });
+						this.$confirm('确认提交吗？', '提示', {}).then(() => {
+							this.editLoading = true;
+							let para = Object.assign({}, this.editForm);
+							this.$axios.post('http://localhost:3000/questions/edit',
+							{
+								para:para
+							})
+							.then(function (res) {
+								that.$message({
+									message: '提交成功',
+									type: 'success'
+								});
+								that.getQuestions()
+							})
+							this.editLoading = false;
+							//NProgress.done();
+							
+							this.$refs['editForm'].resetFields();
+							this.editFormVisible = false;
+						});
 					}
 				});
-			},
-			editQuestions: function(question) {
-				// var questionIndex = this.$store.state.questionIndex				
-				// // var question = this.$store.excelData[questionIndex]
-				// var data = this.$store.state.excelData
-				// data[questionIndex] = question
-				// this.$store.commit('editQuestion',data)
-				// console.log(question)
 			},
 			//删除
 			handleDel: function (index, row) {
@@ -308,16 +309,9 @@
 						});
 						that.getQuestions()
 					})
-					// removeUser(para).then((res) => {
-					// 	this.listLoading = false;
-					// 	//NProgress.done();
-					// 	this.$message({
-					// 		message: '删除成功',
-					// 		type: 'success'
-					// 	});
-					// 	this.getUsers();
-					// });
-				})		
+					}).catch((error) => {
+					console.log(error)
+				})
 			},		
 			// 批量删除
 			batchRemove: function () {
@@ -338,8 +332,8 @@
 						});
 						that.getQuestions()
 					})
-				}).catch(() => {
-
+				}).catch((error) => {
+					console.log(error)
 				});
 			},
 			handleCurrentChange(val) {
