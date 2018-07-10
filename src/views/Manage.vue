@@ -16,38 +16,38 @@
 		</el-col>
 
 		<!--列表-->
-		<el-table  @row-click="handleEdit" :data="questions" border highlight-current-row v-loading="listLoading" @selection-change="selsChange" style="width: 100%;">
+		<el-table  @row-click="handleEdit" :data="questions" border highlight-current-row v-loading="listLoading" @selection-change="selsChange" :row-style="rowClass" style="width: 100%;">
 			<el-table-column className="column_center" type="selection" width="55">
 			</el-table-column>
-			<el-table-column  className="column_center" type="index" label="题号" width="60">
+			<el-table-column  className="column_center" type="index" label="题号">
 			</el-table-column>
-			<el-table-column  className="column_center" prop="type" label="题型" width="80" sortable>
+			<el-table-column  className="column_center" prop="type" label="题型" sortable>
 			</el-table-column>
-			<el-table-column className="column_center" prop="title" label="题目" width="520" sortable>
+			<el-table-column className="column_center" prop="title" label="题目" width="500px" sortable>
 			</el-table-column>
-			<el-table-column className="column_center" prop="options[0][title]" label="选项A" width="150"  sortable>
+			<el-table-column className="column_center" prop="options[0][title]" label="选项A">
 			</el-table-column>
-			<el-table-column className="column_center" prop="options[1][title]" label="选项B" width="150" sortable>
+			<el-table-column className="column_center" prop="options[1][title]" label="选项B">
 			</el-table-column>
-			<el-table-column className="column_center" prop="options[2][title]" label="选项C" width="150" sortable>
+			<el-table-column className="column_center" prop="options[2][title]" label="选项C">
 			</el-table-column>
-			<el-table-column className="column_center" prop="options[3][title]" label="选项D" width="150" sortable>
+			<el-table-column className="column_center" prop="options[3][title]" label="选项D">
 			</el-table-column>
-			<el-table-column className="column_center" prop="options[4][title]" label="选项E" width="150" sortable>
+			<el-table-column className="column_center" prop="options[4][title]" label="选项E">
 			</el-table-column>
-			<el-table-column className="column_center" prop="answer" label="答案" width="120" sortable>
+			<el-table-column className="column_center" prop="answer" label="答案">
 			</el-table-column>
-			<el-table-column className="column_center" label="操作" width="150">
-				<template scope="scope">
+			<el-table-column className="column_center" label="操作">
+				<template slot-scope="scope">
 					<!-- <el-button size="small"  @click="handleEdit(scope.$index, scope.row)">编辑</el-button> -->
-					<el-button type="danger" size="small" @click="handleDel(scope.$index, scope.row)">删除</el-button>
+					<el-button type="danger" size="small" @click.stop="handleDel(scope.$index, scope.row)">删除</el-button>
 				</template>
 			</el-table-column>
 		</el-table>
 
 		<!--工具条-->
 		<el-col :span="24" class="toolbar">
-			<el-button type="danger" style="float:left;" :disabled="this.sels.length===0">批量删除</el-button>
+			<el-button type="danger"  @click="batchRemove" style="float:left;" :disabled="this.sels.length===0">批量删除</el-button>
 			<el-pagination  :current-page="currentPage" layout="prev, pager, next" @current-change="handleCurrentChange" :page-size="20" :total="total" style="float:right;">
 			</el-pagination>
 		</el-col>
@@ -56,7 +56,12 @@
 		<el-dialog title="编辑" v-model="editFormVisible" :visible.sync="editFormVisible" :close-on-click-modal="false">
 			<el-form :model="editForm" label-width="80px" :rules="editFormRules" ref="editForm">
 				<el-form-item label="题目" prop="question">
-					<el-input v-model="editForm.question" type="textarea" auto-complete="off"></el-input>
+					<el-input v-model="editForm.question" type="textarea" autosize auto-complete="off"></el-input>
+				</el-form-item>
+				<el-form-item label="题型" prop="type">
+					<el-col>
+						<el-input v-model="editForm.type"  disabled :min="0" :max="200" :maxlength=100 auto-complete="off"></el-input>
+					</el-col>
 				</el-form-item>
 				<el-form-item label="选项A" prop="optionA">
 					<el-col>
@@ -70,17 +75,17 @@
 				</el-form-item>
 				<el-form-item label="选项C" prop="optionC">
 					<el-col>
-						<el-input v-model="editForm.optionC" :min="0" :max="200" auto-complete="off"></el-input>
+						<el-input v-model="editForm.optionC" :disabled='disabled' :min="0" :max="200" auto-complete="off"></el-input>
 					</el-col>
 				</el-form-item>
 				<el-form-item label="选项D" prop="optionD">
 					<el-col>
-						<el-input v-model="editForm.optionD" :min="0" :max="200" auto-complete="off"></el-input>
+						<el-input v-model="editForm.optionD" :disabled='disabled' :min="0" :max="200" auto-complete="off"></el-input>
 					</el-col>
 				</el-form-item>
 				<el-form-item label="选项E" prop="optionE">
 					<el-col>
-						<el-input v-model="editForm.optionE" :min="0" :max="200" auto-complete="off"></el-input>
+						<el-input v-model="editForm.optionE" :disabled='disabled' :min="0" :max="200" auto-complete="off"></el-input>
 					</el-col>
 				</el-form-item>
 				<el-form-item label="答案" prop="answer">
@@ -159,7 +164,25 @@
 
 	export default {
 		data() {
+			var checkAnswer = (rule, value, callback) => {
+					if(!value.length){
+						return callback(new Error('答案不能为空'));
+					}
+					if(this.editForm.type === '单选题' && value.length >1){
+						return callback(new Error('单选题答案不能超过一个'));
+					}else if(this.editForm.type === '多选题' && value.length ==1){
+						return callback(new Error('多选题不能少于两个答案'))
+					} else if(this.editForm.type === '判断题' && value.length >1 ){
+						return callback(new Error('判断题答案不能超过一个'));
+					}
+					else{
+						callback()
+					}
+				}
 			return {
+				rowClass: function(row,index) {
+					return {"height":"100px"}
+				},
 				options:[
 					{
 						value:'A'
@@ -177,11 +200,6 @@
 						value:'E'
 					}
 				],
-				types:[
-					{ value:'单选题'},
-					{ value:'多选题'},
-					{ value:'判断题'}
-				],
 				optionValue:[],
 				filters: {
 					name: ''
@@ -189,27 +207,32 @@
 				questions:[],
 				total: 0,
 				page: 1,
+				disabled: false,
 				currentPage:1,
 				listLoading: false,
 				sels: [],//列表选中列
 				editFormVisible: false,//编辑界面是否显示
 				editLoading: false,
 				editFormRules: {
-					name: [
-						{ required: true, message: '请输入姓名', trigger: 'blur' }
+					question: [
+						{ required: true, message: '请输入题目', trigger: 'blur' }
+					],
+					answer: [
+						{ validator: checkAnswer, trigger: 'change' }
 					]
 				},
 				//编辑界面数据
 				editForm: {
-					question: "",
+					question_id:'',
+					type:'',
+					question: '',
 					optionA: '',
 					optionB: '',
 					optionC: '',
 					optionD: '',
 					optionE: '',
 					answer:[]
-				}
-
+				},
 				// Visible: false,//新增界面是否显示
 				// addLoading: false,
 				// addFormRules: {
@@ -235,12 +258,73 @@
 		},
 		methods: {
 			handleEdit: function (row, event, column) {
+				this.disabled = false
+				this.editForm = {
+					question_id:'',
+					type:'',
+					question: '',
+					optionA: '',
+					optionB: '',
+					optionC: '',
+					optionD: '',
+					optionE: '',
+					answer:[]
+					}
 				this.editFormVisible = true;
 				this.editForm.answer = []
-				
+				this.editForm.question_id = row._id
 				this.editForm.question = row.title
+				this.editForm.type = row.type //单选，多选，判断
 				this.editForm.optionA = row.options[0].title
 				this.editForm.optionB = row.options[1].title
+				if(row.type == "单选题"){
+					this.options = [
+						{
+							value:'A'
+						},
+						{
+							value:'B'
+						},
+						{
+							value:'C'
+						},
+						{
+							value:'D'
+						}
+					]
+				}
+				if(row.type =="多选题"){
+					this.options = [
+						{
+							value:'A'
+						},
+						{
+							value:'B'
+						},
+						{
+							value:'C'
+						},
+						{
+							value:'D'
+						},
+						{
+							value:'E'
+						}
+					]
+				}
+				if(row.type == "判断题"){
+					this.disabled = true
+					this.options = [
+						{
+							value:'是'
+						},
+						{
+							value:'否'
+						}
+						
+					]
+				}
+				console.log(row.options.length)
 				if(row.options.length>2){
 					this.editForm.optionC = row.options[2].title
 					this.editForm.optionD = row.options[3].title
@@ -251,65 +335,89 @@
 				var answerArr = []
 				answerArr = row.answer.split('')
 				for(var i=0;i<answerArr.length;i++){
-					if(answerArr[i]!=' '){
+					if(answerArr[i]!=' '&& answerArr[i] !=','){
 						if(this.editForm.answer.indexOf(answerArr[i]) == -1){
 							this.editForm.answer.push(answerArr[i])
 						}
 					}
 				}
-				console.log(this.editForm.answer)				
+				console.log(this.editForm)
 			},
 			editSubmit: function () {
+				console.log(123)
+				var that = this
 				this.$refs.editForm.validate((valid) => {
 					if (valid) {
-						// this.$confirm('确认提交吗？', '提示', {}).then(() => {
-						// 	this.editLoading = true;
-						// 	//NProgress.start();
-						// 	let para = Object.assign({}, this.editForm);
-						// 	console.log(para)
-						// 	this.editQuestions(para)
-						// 	this.editLoading = false;
-						// 	//NProgress.done();
-						// 	this.$message({
-						// 		message: '提交成功',
-						// 		type: 'success'
-						// 	});
-						// 	this.$store.getters.getLatestQuestions;
-						// 	this.$refs['editForm'].resetFields();
-						// 	this.editFormVisible = false;
-						// });
+						this.$confirm('确认提交吗？', '提示', {}).then(() => {
+							this.editLoading = true;
+							let para = Object.assign({}, this.editForm);
+							this.$axios.post('http://localhost:3000/questions/edit',
+							{
+								para:para
+							})
+							.then(function (res) {
+								that.$message({
+									message: '提交成功',
+									type: 'success'
+								});
+								that.getQuestions()
+							})
+							this.editLoading = false;
+							//NProgress.done();
+							
+							this.$refs['editForm'].resetFields();
+							this.editFormVisible = false;
+						});
 					}
 				});
 			},
-			editQuestions: function(question) {
-				// var questionIndex = this.$store.state.questionIndex				
-				// // var question = this.$store.excelData[questionIndex]
-				// var data = this.$store.state.excelData
-				// data[questionIndex] = question
-				// this.$store.commit('editQuestion',data)
-				// console.log(question)
-			},
 			//删除
 			handleDel: function (index, row) {
+				var that = this
 				this.$confirm('确认删除该记录吗?', '提示', {
 					type: 'warning'
 				}).then(() => {
 					this.listLoading = true;
-					//NProgress.start();
-					let para = { id: row.id };
-					removeUser(para).then((res) => {
-						this.listLoading = false;
-						//NProgress.done();
-						this.$message({
+					console.log(row._id) //通过row._id去数据库删除
+					// console.log("index:" +index) 从0开始
+					this.$axios.post('http://localhost:3000/questions',
+					{
+						id:row._id
+					})
+					.then(function (res) {
+						that.$message({
 							message: '删除成功',
 							type: 'success'
 						});
-						this.getUsers();
-					});
-				}).catch(() => {
-
-				});
+						that.getQuestions()
+					})
+					}).catch((error) => {
+					console.log(error)
+				})
 			},		
+			// 批量删除
+			batchRemove: function () {
+				var that = this
+				var ids = this.sels.map(item => item._id);
+				this.$confirm('确认删除选中记录吗？', '提示', {
+					type: 'warning'
+				}).then(() => {
+					this.listLoading = true;
+					this.$axios.post('http://localhost:3000/questions/delBatch',
+					{
+						id:ids
+					})
+					.then(function (res) {
+						that.$message({
+							message: '删除成功',
+							type: 'success'
+						});
+						that.getQuestions()
+					})
+				}).catch((error) => {
+					console.log(error)
+				});
+			},
 			handleCurrentChange(val) {
 				this.page = val;
 				if(typeof val == 'number'){
@@ -445,30 +553,7 @@
 			// },
 			selsChange: function (sels) {
 				this.sels = sels;
-			},
-			//批量删除
-		// 	batchRemove: function () {
-		// 		var ids = this.sels.map(item => item.id).toString();
-		// 		this.$confirm('确认删除选中记录吗？', '提示', {
-		// 			type: 'warning'
-		// 		}).then(() => {
-		// 			this.listLoading = true;
-		// 			//NProgress.start();
-		// 			let para = { ids: ids };
-		// 			batchRemoveUser(para).then((res) => {
-		// 				this.listLoading = false;
-		// 				//NProgress.done();
-		// 				this.$message({
-		// 					message: '删除成功',
-		// 					type: 'success'
-		// 				});
-		// 				this.getUsers();
-		// 			});
-		// 		}).catch(() => {
-
-		// 		});
-		// 	}
-		// },
+			}
 		},
 		mounted() {
 			var that = this //注意用that
@@ -489,7 +574,7 @@
 		text-align: center !important;
 	}
 
-	 .el-table th{
+	.el-table th{
         background:#f4f4f4 !important;
     }
 
@@ -497,5 +582,4 @@
 		background:#f4f4f4 !important;
 		padding: 5px
 	}
-
 </style>
