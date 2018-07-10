@@ -25,6 +25,9 @@
           account: 'admin',
           checkPass: '123456'
         },
+        user:{
+          account:'admin'
+        },
         rules2: {
           account: [
             { required: true, message: '请输入账号', trigger: 'blur' },
@@ -53,6 +56,7 @@
             if(loginParams.username == this.ruleForm2.account && loginParams.password == this.ruleForm2.checkPass)
             {
                 console.log('密码正确')
+                sessionStorage.setItem('user', JSON.stringify(this.user));
                 this.$router.push({ path: '/imports' });
             }
             // requestLogin(loginParams).then(data => {

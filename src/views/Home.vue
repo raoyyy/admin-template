@@ -1,10 +1,17 @@
 <template>
 	<el-row class="container">
 			<el-menu :default-active="currentActive" class="el-menu-demo" mode="horizontal">
-  				<el-menu-item index="/admin/imports"><router-link to="/form">导入题库</router-link></el-menu-item>
+  				<el-menu-item index="/admin/imports"><router-link to="/imports">导入题库</router-link></el-menu-item>
 				<el-menu-item index="/admin/manage"><router-link to="/manage">题目管理</router-link></el-menu-item>
+				<el-menu-item style="float:right" index="/admin/manage"><router-link to="/login">退出登录</router-link></el-menu-item>
 			</el-menu>
-			<router-view></router-view>
+			<section class="content-container">
+				<el-col :span="24" class="content-wrapper">
+					<transition name="fade" mode="out-in">
+						<router-view></router-view>
+					</transition>
+				</el-col>
+			</section>
 	</el-row>
 </template>
 
@@ -87,6 +94,10 @@
 		bottom: 0px;
 		width: 100%;
     }
+
+	.content-container {
+		margin-top: 30px;
+	}
 	/* .container {
 		position: absolute;
 		top: 0px;
