@@ -2,7 +2,7 @@ import Login from './views/Login.vue'
 import Manage from './views/Manage.vue'
 // import NotFound from './views/404.vue'
  import Home from './views/Home.vue'
- import upload from './components/upload.vue'
+//  import upload from './components/upload.vue'
  import Form from './components/Form.vue'
 
 
@@ -26,7 +26,7 @@ let routes = [
         name: '导航一',
         iconCls: 'el-icon-message',//图标样式class
         children: [
-            { path: '/imports', component: upload, name: '导入题库', hidden: false },
+            { path: '/imports', component: Form, name: '导入题库', hidden: false },
             { path: '/manage', component: Manage, name: '题目管理' },
             { path: '/form', component: Form, name: 'Form' },
             // { path: '/user', component: user, name: '列表' },
