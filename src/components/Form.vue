@@ -42,6 +42,7 @@ export default {
 			return {
         appList:[],
         deviceList:[],
+        fileName:'',
 				form: {
           appName:'',
           deviceName:''
@@ -57,16 +58,34 @@ export default {
 					deviceName: [
 						{ required: true, message: '请选择设备', trigger: 'blur' }
           ],
-          file:[
-            // { required: true, message: '请选择文件', trigger: 'blur' }
-          ]
 				},
 			}
 		},
   methods:{
-    handleSuccess() {
+    handleSuccess(res) {
+      var that = this
       console.log('submit!');
       this.$message.success('上传成功');
+      console.log(res)
+      this.fileName = res
+      this.$axios.get('http://118.25.21.169:3000/devices/send',{
+        params:{
+          fileName:this.fileName
+        }    
+      })
+      .then(function(response){
+        var url = 'http://118.25.21.169:3000/devices/send?fileName=' +that.fileName
+        that.downloadZip(url)
+      })
+
+    },
+    downloadZip (url) {
+        const aLink = document.createElement("a");
+        aLink.target = "_self";
+        aLink.href = url;
+        document.body.appendChild(aLink);
+        aLink.click();
+        aLink.remove();
     },
     handleError(err,file) {
       console.log(err)
@@ -102,8 +121,9 @@ export default {
         console.log('上传模板只能是 xls、xlsx 格式!')
       }
       return extension || extension2 
-    }
+    },
   },
+
   mounted() {
       var that = this //注意用that
 			this.$axios.get('http://118.25.21.169:3000/devices')
