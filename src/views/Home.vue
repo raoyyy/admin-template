@@ -1,8 +1,8 @@
 <template>
 	<el-row class="container">
 			<el-menu :default-active="currentActive" class="el-menu-demo" mode="horizontal">
-  				<el-menu-item index="/admin/imports"><router-link to="/imports">导入题库</router-link></el-menu-item>
-				<el-menu-item index="/admin/manage"><router-link to="/manage">题目管理</router-link></el-menu-item>
+  				<el-menu-item index="/admin/imports"><router-link to="/categories">分类管理</router-link></el-menu-item>
+				<el-menu-item index="/admin/manage"><router-link to="/cases">案件管理</router-link></el-menu-item>
 				<el-menu-item style="float:right" index="/admin/manage"><router-link to="/login">退出登录</router-link></el-menu-item>
 			</el-menu>
 			<section class="content-container">
